@@ -14,11 +14,11 @@ namespace api.Controllers
     {
         // TODO: Log出力
         // private readonly ILogger<AuthenticationController> _logger;
-        private readonly AuthInfoService _authInfoService;
+        private readonly AuthInfoStore _authInfoService;
 
         public SignUpController(
              // ILogger<AuthenticationController> logger,
-             AuthInfoService authInfoService)
+             AuthInfoStore authInfoService)
         {
             // _logger = logger;
             _authInfoService = authInfoService;
@@ -38,7 +38,8 @@ namespace api.Controllers
                 var newAuthInfo = await CreateUser(sign.Email, sign.Password);
                 return Ok(newAuthInfo);
             }
-            return BadRequest("Failed to create user. The querry is wrong.");
+
+            throw new ArgumentNullException(nameof(sign));
         }
 
 
@@ -51,11 +52,11 @@ namespace api.Controllers
         private async Task<AuthInfo?> CreateUser(string email, string password)
         {
             // TODO: passwordの暗号化。
-            //       いったん平文でDBに入れる。
+            //       一旦、平文でDBに入れる。
             // TODO: emailがフォーマットに合っているか
             //       front側でもチェック予定だが、念のため実装しておきたい
             var id = ObjectId.GenerateNewId();
-            var newAuthInfo = new AuthInfo()
+            var newAuthInfo = new AuthInfo
             {
                 Id = id,
                 Email = email,
@@ -64,9 +65,7 @@ namespace api.Controllers
                 UpdatedDate = DateTime.UtcNow
             };
             await _authInfoService.CreateAsync(newAuthInfo);
-
-            // Check data
-            return await _authInfoService.GetAsync(id);
+            return await Task.FromResult(newAuthInfo);
         }
     }
 }

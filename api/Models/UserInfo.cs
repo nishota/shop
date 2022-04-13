@@ -7,8 +7,7 @@ namespace api.Models
     {
         [BsonId]
         public ObjectId Id { get; set; }
-        public ObjectId UserId { get; set; }
-        public string Name { get; set; } = null!;
+        public ObjectId AuthId { get; set; }
         public string DisplayName { get; set; } = null!;
         [BsonDateTimeOptions(Kind = DateTimeKind.Local)]
         public DateTime? CreatedDate { get; set; }

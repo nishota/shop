@@ -1,22 +1,21 @@
-using api.Services;
+using api.Models;
 using api.Models.Settings;
+using api.Services;
+using api.Services.Interface;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
-using System.Text;
 using Microsoft.OpenApi.Models;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-// for MongoDb
 builder.Services.Configure<DataBaseSettings>(
     builder.Configuration.GetSection(DataBaseSettings.Database));
-builder.Services.AddSingleton<AuthInfoService>();
 builder.Services.Configure<JwtSettings>(
     builder.Configuration.GetSection(JwtSettings.Jwt));
 
 builder.Services.AddControllers();
-
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(swagger =>
@@ -28,7 +27,7 @@ builder.Services.AddSwaggerGen(swagger =>
         Title = "API for Fresh Vegetable Shop"
     });
     // To Enable authorization using Swagger (JWT)  
-    swagger.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme()
+    swagger.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Name = "Authorization",
         Type = SecuritySchemeType.ApiKey,
@@ -38,33 +37,38 @@ builder.Services.AddSwaggerGen(swagger =>
         Description = "JWT Authorization header using the Bearer scheme. \r\n\r\n Enter 'Bearer' [space] and then your token in the text input below.\r\n\r\nExample: \"Bearer 12345abcdef\"",
     });
     swagger.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
         {
+            new OpenApiSecurityScheme
             {
-                    new OpenApiSecurityScheme
-                    {
-                        Reference = new OpenApiReference
-                        {
-                            Type = ReferenceType.SecurityScheme,
-                            Id = "Bearer"
-                        }
-                    },
-                    new string[] {}
-
-            }
-        });
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            Array.Empty<string>()
+        }
+    });
 });
 
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
+
+builder.Services.AddIdentity<AuthInfo, RoleInfo>()
+    .AddUserStore<AuthInfoStore>()
+    .AddRoleStore<RoleInfoStore>();
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
 {
     options.RequireHttpsMetadata = false;
     options.SaveToken = true;
-    options.TokenValidationParameters = new TokenValidationParameters()
+    options.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateIssuer = true,
         ValidateAudience = true,
-        // TODO: 何かよくわからない。optionalなのでいったん抜く。
+        // TODO: 何かよくわからない。
         ValidAudience = builder.Configuration["Jwt:Audience"], 
-        // TODO: 何かよくわからない。optionalなのでいったん抜く。
+        // TODO: 何かよくわからない。
         ValidIssuer = builder.Configuration["Jwt:Issuer"],
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
     };

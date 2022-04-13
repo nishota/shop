@@ -12,10 +12,9 @@
         /// MongoDBで定義してあるDatabase名
         /// </summary>
         public const string DataBaseName = "FreshVegetableShop";
-        /// <summary>
-        /// MongoDBで定義してあるCollection名
-        /// </summary>
+
         public const string AuthCollectionName = "Auth";
+        public const string RoleCollectionName = "Role";
 
         /// <summary>
         /// MongoDBとの接続文字列

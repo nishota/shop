@@ -19,12 +19,12 @@ namespace api.Controllers
         // TODO: Log出力
         // private readonly ILogger<AuthenticationController> _logger;
         private readonly IOptions<JwtSettings> _jwtSettings;
-        private readonly AuthInfoService _authInfoService;
+        private readonly AuthInfoStore _authInfoService;
 
         public SignInController(
              // ILogger<AuthenticationController> logger,
              IOptions<JwtSettings> jwtSettings,
-             AuthInfoService authInfoService)
+             AuthInfoStore authInfoService)
         {
             // _logger = logger;
             _jwtSettings = jwtSettings;
