@@ -1,4 +1,4 @@
-﻿using api.Models;
+﻿using api.Models.Settings;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 

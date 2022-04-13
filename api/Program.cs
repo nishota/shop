@@ -1,5 +1,5 @@
 using api.Services;
-using api.Models;
+using api.Models.Settings;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
@@ -25,8 +25,7 @@ builder.Services.AddSwaggerGen(swagger =>
     swagger.SwaggerDoc("v1", new OpenApiInfo
     {
         Version = "v1",
-        Title = "JWT Token Authentication API",
-        Description = "ASP.NET Core 6 Web API"
+        Title = "API for Fresh Vegetable Shop"
     });
     // To Enable authorization using Swagger (JWT)  
     swagger.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme()

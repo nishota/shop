@@ -1,63 +1,66 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using api.Models;
+﻿using api.Models;
+using api.Models.Settings;
+using api.Models.Schemes;
 using api.Services;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using Microsoft.Extensions.Options;
-using Microsoft.AspNetCore.Authorization;
 
 namespace api.Controllers
 {
     [ApiController]
-    [Route("api/auth")]
-    public class AuthenticationController : ControllerBase
+    [Route("api/auth/[controller]")]
+    public class SignInController : ControllerBase
     {
-        private readonly ILogger<AuthenticationController> _logger;
+        // TODO: Log出力
+        // private readonly ILogger<AuthenticationController> _logger;
         private readonly IOptions<JwtSettings> _jwtSettings;
         private readonly AuthInfoService _authInfoService;
 
-        public AuthenticationController(
-             ILogger<AuthenticationController> logger,
+        public SignInController(
+             // ILogger<AuthenticationController> logger,
              IOptions<JwtSettings> jwtSettings,
              AuthInfoService authInfoService)
         {
-            _logger = logger;
+            // _logger = logger;
             _jwtSettings = jwtSettings;
             _authInfoService = authInfoService;
         }
 
         [HttpPost]
         [AllowAnonymous]
-        public async Task<IActionResult> Post(AuthInfo authInfo)
+        public async Task<IActionResult> Post(Sign sign)
         {
-            if (authInfo != null && authInfo.Email != null && authInfo.Password != null)
+            if (sign is not null && sign.HasData)
             {
-                var user = await GetUser(authInfo.Email, authInfo.Password);
+                var user = await GetUser(sign.Email, sign.Password);
 
-                if (user != null)
+                if (user is not null)
                 {
                     //create claims details based on the user information
                     var claims = new[] {
-                        // TODO: これなに? optionalなのでとりあえず抜く
-                        // new Claim(JwtRegisteredClaimNames.Sub, _jwtSettings.Value.Subject), 
+                        // TODO: これなに?
+                        new Claim(JwtRegisteredClaimNames.Sub, _jwtSettings.Value.Subject), 
                         new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                         new Claim(JwtRegisteredClaimNames.Iat, DateTime.UtcNow.ToString()),
                         new Claim(nameof(user.Email), user.Email),
+                        new Claim(nameof(user.CreatedDate), user.CreatedDate.ToString())
                         // new Claim(nameof(user.Password), user.Password) // TODO: password入れないっぽい?
                     };
 
                     var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.Value.Key));
                     var signIn = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
                     var token = new JwtSecurityToken(
-                        // TODO: これなに? optionalなのでとりあえずnullにする
+                        // TODO: これなに?
                         _jwtSettings.Value.Issuer,
-                        // TODO: これなに? optionalなのでとりあえずnullにする
+                        // TODO: これなに?
                         _jwtSettings.Value.Audience, 
                         claims,
-                        expires: DateTime.UtcNow.AddMinutes(10),
+                        expires: DateTime.UtcNow.AddMinutes(60),
                         signingCredentials: signIn);
 
                     return Ok(new JwtSecurityTokenHandler().WriteToken(token));
@@ -76,7 +79,9 @@ namespace api.Controllers
         private async Task<AuthInfo?> GetUser(string email, string password)
         {
             // TODO: passwordの暗号化。
-            // TODO: いったん平文でDBに入れる。
+            //       いったん平文でDBに入れる。
+            // TODO: emailがフォーマットに合っているか
+            //       front側でもチェック予定だが、念のため実装しておきたい
             return await _authInfoService.GetAsync(email, password);
         }
     }

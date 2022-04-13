@@ -1,4 +1,5 @@
-﻿using api.Models;
+﻿using api.Models.Settings;
+using api.Models;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 using MongoDB.Bson;
@@ -21,13 +22,28 @@ namespace api.Services
             // if (this._collection == null) throw new HogeHogeException();
         }
 
-        //Login(email, password)
-        //メアドとパスワードがDBに存在するか確認する
-        // email, passwordの組み合わせが存在する
-        // emailは存在するがpasswordが間違い、emailが存在しない
-        public async Task<AuthInfo?> GetAsync(string email, string password) =>
-            //await _collection.Find(_ => true).FirstOrDefaultAsync();
-            await _collection.Find(x => x.Email == email && x.Password == password).FirstOrDefaultAsync();
+        /// <summary>
+        /// ObjectIdで検索
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        public async Task<AuthInfo?> GetAsync(ObjectId id) =>
+            await _collection.Find(x => x.Id == id).FirstOrDefaultAsync();
+        /// <summary>
+        /// メールアドレスで検索
+        /// </summary>
+        /// <param name="email"></param>
+        /// <returns></returns>
+        public async Task<AuthInfo?> GetAsync(string email) =>
+            await _collection.Find(x => x.Email == email).FirstOrDefaultAsync();
+        /// <summary>
+        /// メールアドレスとパスワードで検索
+        /// </summary>
+        /// <param name="email">メールアドレス</param>
+        /// <param name="encryptedPassword">暗号化されたパスワード</param>
+        /// <returns></returns>
+        public async Task<AuthInfo?> GetAsync(string email, string encryptedPassword) =>
+            await _collection.Find(x => x.Email == email && x.Password == encryptedPassword).FirstOrDefaultAsync();
 
         public async Task CreateAsync(AuthInfo userInfo) =>
             await _collection.InsertOneAsync(userInfo);
