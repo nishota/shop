@@ -1,8 +1,8 @@
 ﻿using api.Models;
-using api.Models.Schemes;
+using api.Models.Schemas;
 using api.Services;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson;
 
@@ -14,29 +14,32 @@ namespace api.Controllers
     {
         // TODO: Log出力
         // private readonly ILogger<AuthenticationController> _logger;
-        private readonly AuthInfoStore _authInfoService;
+        private readonly AuthInfoStore _authInfoStore;
 
         public SignUpController(
              // ILogger<AuthenticationController> logger,
-             AuthInfoStore authInfoService)
+             AuthInfoStore authInfoStore)
         {
             // _logger = logger;
-            _authInfoService = authInfoService;
+            _authInfoStore = authInfoStore;
         }
 
+        // TODO: リクエストを送るほうで権限を決めるので、そこを修正したい
         [HttpPost]
         [AllowAnonymous]
         public async Task<IActionResult> Post(Sign sign)
         {
             if(sign is not null && sign.HasData)
             {
-                var isChecked = await HasAuthInfo(sign.Email);
-                if(isChecked)
+                var hasEmail = await HasAuthInfo(sign.Email);
+                if(hasEmail)
                 {
-                    return BadRequest("Failed to crreate user. Your email address is already registered.");
+                    return BadRequest("Failed to create user. Your email address is already registered.");
                 }
-                var newAuthInfo = await CreateUser(sign.Email, sign.Password);
-                return Ok(newAuthInfo);
+                var newAuthInfo = await CreateUser(sign);
+                if (newAuthInfo is not null) return Ok(newAuthInfo);
+
+                return BadRequest("Failed to create user.");
             }
 
             throw new ArgumentNullException(nameof(sign));
@@ -45,27 +48,28 @@ namespace api.Controllers
 
         private async Task<bool> HasAuthInfo(string email)
         {
-            var user = await _authInfoService.GetAsync(email);
+            var user = await _authInfoStore.FindByNameAsync(email, default);
             return user is not null;
         }
 
-        private async Task<AuthInfo?> CreateUser(string email, string password)
+        private async Task<AuthInfo?> CreateUser(Sign sign)
         {
-            // TODO: passwordの暗号化。
-            //       一旦、平文でDBに入れる。
             // TODO: emailがフォーマットに合っているか
             //       front側でもチェック予定だが、念のため実装しておきたい
-            var id = ObjectId.GenerateNewId();
+            var haser = new PasswordHasher<AuthInfo>();
             var newAuthInfo = new AuthInfo
             {
-                Id = id,
-                Email = email,
-                Password = password,
+                Id = ObjectId.GenerateNewId(),
+                UserName = sign.Email,
+                NormalizedUserName = sign.Email.ToLower(),
+                Role = sign.Role,
                 CreatedDate = DateTime.UtcNow,
                 UpdatedDate = DateTime.UtcNow
             };
-            await _authInfoService.CreateAsync(newAuthInfo);
-            return await Task.FromResult(newAuthInfo);
+            newAuthInfo.PasswordHash = haser.HashPassword(newAuthInfo, sign.Password);
+            var result = await _authInfoStore.CreateAsync(newAuthInfo, default);
+            if(result.Succeeded) return await Task.FromResult(newAuthInfo.GetInstanceWithoutPassword());
+            return null;
         }
     }
 }

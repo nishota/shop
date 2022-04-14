@@ -6,7 +6,7 @@ namespace api.Services
 {
     public abstract class DatabaseConnectionService
     {
-        protected IMongoDatabase Database { get; }
+        protected IMongoDatabase Database { get; private set; }
         // TODO: ログ出力実装
         // private readonly ILogger _logger;
         public DatabaseConnectionService(
@@ -17,7 +17,10 @@ namespace api.Services
             var client = new MongoClient(settings);
             this.Database = client.GetDatabase(DataBaseSettings.DataBaseName);
             // TODO: 指定のDatabaseがなかった場合
-            // if (this.Database == null) throw new HogeHogeException();
+        }
+
+        public void Dispose()
+        {
         }
     }
 }

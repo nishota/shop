@@ -26,6 +26,7 @@ builder.Services.AddSwaggerGen(swagger =>
         Version = "v1",
         Title = "API for Fresh Vegetable Shop"
     });
+
     // To Enable authorization using Swagger (JWT)  
     swagger.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
@@ -52,10 +53,11 @@ builder.Services.AddSwaggerGen(swagger =>
     });
 });
 
-
-builder.Services.AddIdentity<AuthInfo, RoleInfo>()
-    .AddUserStore<AuthInfoStore>()
-    .AddRoleStore<RoleInfoStore>();
+builder.Services.AddSingleton<AuthInfoStore>();
+// TODO: Ç±ÇÍÇæÇ∆Ç≈Ç´Ç»Ç©Ç¡ÇΩ
+//builder.Services.AddIdentity<AuthInfo, RoleInfo>()
+//    .AddUserStore<AuthInfoStore>()
+//    .AddRoleStore<RoleInfoStore>();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -66,9 +68,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     {
         ValidateIssuer = true,
         ValidateAudience = true,
-        // TODO: âΩÇ©ÇÊÇ≠ÇÌÇ©ÇÁÇ»Ç¢ÅB
         ValidAudience = builder.Configuration["Jwt:Audience"], 
-        // TODO: âΩÇ©ÇÊÇ≠ÇÌÇ©ÇÁÇ»Ç¢ÅB
         ValidIssuer = builder.Configuration["Jwt:Issuer"],
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
     };

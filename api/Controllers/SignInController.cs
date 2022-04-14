@@ -1,6 +1,6 @@
 ﻿using api.Models;
 using api.Models.Settings;
-using api.Models.Schemes;
+using api.Models.Schemas;
 using api.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -9,6 +9,8 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using Microsoft.AspNetCore.Identity;
+using api.Services.Interface;
 
 namespace api.Controllers
 {
@@ -19,16 +21,16 @@ namespace api.Controllers
         // TODO: Log出力
         // private readonly ILogger<AuthenticationController> _logger;
         private readonly IOptions<JwtSettings> _jwtSettings;
-        private readonly AuthInfoStore _authInfoService;
+        private readonly AuthInfoStore _authInfoStore;
 
         public SignInController(
              // ILogger<AuthenticationController> logger,
              IOptions<JwtSettings> jwtSettings,
-             AuthInfoStore authInfoService)
+             AuthInfoStore authInfoStore)
         {
             // _logger = logger;
             _jwtSettings = jwtSettings;
-            _authInfoService = authInfoService;
+            _authInfoStore = authInfoStore;
         }
 
         [HttpPost]
@@ -43,11 +45,11 @@ namespace api.Controllers
                 {
                     //create claims details based on the user information
                     var claims = new[] {
-                        // TODO: これなに?
                         new Claim(JwtRegisteredClaimNames.Sub, _jwtSettings.Value.Subject), 
                         new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                         new Claim(JwtRegisteredClaimNames.Iat, DateTime.UtcNow.ToString()),
-                        new Claim(nameof(user.Email), user.Email),
+                        new Claim(nameof(user.UserName), user.UserName),
+                        new Claim(ClaimTypes.Role, sign.Role),
                         new Claim(nameof(user.CreatedDate), user.CreatedDate.ToString())
                         // new Claim(nameof(user.Password), user.Password) // TODO: password入れないっぽい?
                     };
@@ -55,9 +57,7 @@ namespace api.Controllers
                     var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.Value.Key));
                     var signIn = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
                     var token = new JwtSecurityToken(
-                        // TODO: これなに?
                         _jwtSettings.Value.Issuer,
-                        // TODO: これなに?
                         _jwtSettings.Value.Audience, 
                         claims,
                         expires: DateTime.UtcNow.AddMinutes(60),
@@ -76,13 +76,25 @@ namespace api.Controllers
             }
         }
 
-        private async Task<AuthInfo?> GetUser(string email, string password)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="name">名前(メールアドレス)</param>
+        /// <param name="passwordFromRequest"></param>
+        /// <returns></returns>
+        private async Task<AuthInfo?> GetUser(string name, string passwordFromRequest)
         {
-            // TODO: passwordの暗号化。
-            //       いったん平文でDBに入れる。
-            // TODO: emailがフォーマットに合っているか
-            //       front側でもチェック予定だが、念のため実装しておきたい
-            return await _authInfoService.GetAsync(email, password);
+            var authInfo = await _authInfoStore.FindByNameAsync(name, default);
+            if (authInfo is not null)
+            {
+                var haser = new PasswordHasher<AuthInfo>();
+                var result = haser.VerifyHashedPassword(authInfo, authInfo.PasswordHash, passwordFromRequest);
+                if (result == PasswordVerificationResult.Success)
+                {
+                    return authInfo;
+                }
+            }
+            return null;
         }
     }
 }
