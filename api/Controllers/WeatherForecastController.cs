@@ -5,6 +5,10 @@ using api.Models.Settings;
 
 namespace api.Controllers
 {
+    /// <summary>
+    /// テスト用
+    /// TODO: 後で消す
+    /// </summary>
     [Authorize]
     [ApiController]
     [Route("api/test/[controller]")]

@@ -15,8 +15,8 @@ namespace api.Services
             var settings = MongoClientSettings.FromConnectionString(
                 databaseSettings.Value.ConnectionString);
             var client = new MongoClient(settings);
+            // 指定のDBを自動で作ってくれるため、存在確認不要
             this.Database = client.GetDatabase(DataBaseSettings.DataBaseName);
-            // TODO: 指定のDatabaseがなかった場合
         }
 
         public void Dispose()

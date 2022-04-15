@@ -1,7 +1,5 @@
-using api.Models;
 using api.Models.Settings;
 using api.Services;
-using api.Services.Interface;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -54,6 +52,7 @@ builder.Services.AddSwaggerGen(swagger =>
 });
 
 builder.Services.AddSingleton<AuthInfoStore>();
+
 // TODO: ‚±‚ê‚¾‚Æ‚Å‚«‚È‚©‚Á‚½
 //builder.Services.AddIdentity<AuthInfo, RoleInfo>()
 //    .AddUserStore<AuthInfoStore>()
@@ -68,8 +67,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     {
         ValidateIssuer = true,
         ValidateAudience = true,
-        ValidAudience = builder.Configuration["Jwt:Audience"], 
         ValidIssuer = builder.Configuration["Jwt:Issuer"],
+        ValidAudience = builder.Configuration["Jwt:Audience"], 
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
     };
 });

@@ -1,4 +1,4 @@
-﻿namespace api.Models.Settings
+﻿namespace app.Models
 {
     // TODO: 本当はランダムな文字列とかにしたほうがベター
     //       リクエスト内容から何の権限か見えてしまう可能性がある

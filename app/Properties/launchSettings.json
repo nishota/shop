@@ -26,11 +26,11 @@
     },
     "Docker": {
       "commandName": "Docker",
-      "httpPort": 55000,
+      "httpPort": 57000,
       "launchBrowser": true,
       "launchUrl": "{Scheme}://{ServiceHost}:{ServicePort}",
       "publishAllPorts": true,
-      "sslPort": 55001,
+      "sslPort": 57001,
       "useSSL": true
     }
   }

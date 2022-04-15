@@ -13,11 +13,11 @@ namespace api.Controllers
     public class SignUpController : ControllerBase
     {
         // TODO: Log出力
-        // private readonly ILogger<AuthenticationController> _logger;
+        // private readonly ILogger<SignUpController> _logger;
         private readonly AuthInfoStore _authInfoStore;
 
         public SignUpController(
-             // ILogger<AuthenticationController> logger,
+             // ILogger<SignUpController> logger,
              AuthInfoStore authInfoStore)
         {
             // _logger = logger;
@@ -57,6 +57,7 @@ namespace api.Controllers
         {
             // TODO: emailがフォーマットに合っているか
             //       front側でもチェック予定だが、念のため実装しておきたい
+            // TODO: NormalizedUserNameを一意にしたい
             var haser = new PasswordHasher<AuthInfo>();
             var newAuthInfo = new AuthInfo
             {
