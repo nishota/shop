@@ -43,7 +43,6 @@ namespace api.Controllers
 
                 if (user is not null)
                 {
-                    //create claims details based on the user information
                     var claims = new[] {
                         new Claim(JwtRegisteredClaimNames.Sub, _jwtSettings.Value.Subject), 
                         new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),

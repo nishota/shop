@@ -24,7 +24,8 @@ namespace api.Controllers
             _authInfoStore = authInfoStore;
         }
 
-        // TODO: リクエストを送るほうで権限を決めるので、そこを修正したい
+        // TODO: リクエストを送るほうでRoleを決めるので、そこを修正したい
+        // TODO: メールアドレスが正しいかの確認
         [HttpPost]
         [AllowAnonymous]
         public async Task<IActionResult> Post(Sign sign)
